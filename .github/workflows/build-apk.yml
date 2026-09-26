@@ -42,6 +42,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -68,7 +69,7 @@ jobs:
           node-version: "20"
 
       - name: Install Bubblewrap CLI
-        run: npm install -g @bubblewrap/cli
+        run: npm install -g @bubblewrap/cli || npm install -g @bubblewrap/cli
 
       - name: Configure Bubblewrap JDK/Android SDK paths (non-interactive)
         run: |
@@ -105,6 +106,8 @@ jobs:
 
       - name: Build signed APK
         working-directory: build
+        env:
+          GRADLE_OPTS: "-Xmx2560m -Dfile.encoding=UTF-8"
         run: yes n | bubblewrap build --skipPwaValidation
 
       - name: Rename APK

@@ -74,9 +74,14 @@ jobs:
       - name: Configure Bubblewrap JDK/Android SDK paths (non-interactive)
         run: |
           ANDROID_SDK_PATH="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/.android/sdk}}"
-          printf 'n\n%s\nn\n%s\nn\n%s\nn\n%s\n' \
-            "$JAVA_HOME" "$ANDROID_SDK_PATH" "$JAVA_HOME" "$ANDROID_SDK_PATH" | \
-            bubblewrap updateConfig --jdkPath="$JAVA_HOME" --androidSdkPath="$ANDROID_SDK_PATH"
+          mkdir -p "$HOME/.bubblewrap"
+          cat > "$HOME/.bubblewrap/config.json" << EOF
+          {
+            "jdkPath": "$JAVA_HOME",
+            "androidSdkPath": "$ANDROID_SDK_PATH"
+          }
+          EOF
+          bubblewrap doctor
 
       - name: Generate signing key (fresh per build)
         run: |

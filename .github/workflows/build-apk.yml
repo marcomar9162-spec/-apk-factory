@@ -70,6 +70,11 @@ jobs:
       - name: Install Bubblewrap CLI
         run: npm install -g @bubblewrap/cli
 
+      - name: Configure Bubblewrap JDK/Android SDK paths (non-interactive)
+        run: |
+          ANDROID_SDK_PATH="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/.android/sdk}}"
+          bubblewrap updateConfig --jdkPath="$JAVA_HOME" --androidSdkPath="$ANDROID_SDK_PATH"
+
       - name: Generate signing key (fresh per build)
         run: |
           mkdir -p build
@@ -96,11 +101,11 @@ jobs:
 
       - name: Generate Android project from twa-manifest.json
         working-directory: build
-        run: bubblewrap update --manifest=./twa-manifest.json
+        run: yes n | bubblewrap update --manifest=./twa-manifest.json
 
       - name: Build signed APK
         working-directory: build
-        run: bubblewrap build --skipPwaValidation
+        run: yes n | bubblewrap build --skipPwaValidation
 
       - name: Rename APK
         id: rename

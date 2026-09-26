@@ -47,6 +47,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate PWA URL and manifest.json
+        env:
+          PWA_URL: ${{ github.event.inputs.pwa_url }}
+        run: |
+          MANIFEST_URL="${PWA_URL%/}/manifest.json"
+          echo "التحقق من: $MANIFEST_URL"
+          HTTP_CODE=$(curl -s -o /tmp/manifest.json -w "%{http_code}" -L \
+            -A "Mozilla/5.0 (compatible; BubblewrapCI/1.0)" "$MANIFEST_URL")
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ خطأ: ما قدرنا نوصل لـ manifest.json"
+            echo "الرابط المتحقق منه: $MANIFEST_URL"
+            echo "كود الاستجابة: $HTTP_CODE"
+            echo "تأكد إنه: 1) الموقع شغال ومتاح للعموم  2) فيه ملف manifest.json بنفس النطاق  3) الموقع ما عم يحجب طلبات تلقائية (Cloudflare/WAF)"
+            exit 1
+          fi
+          echo "✅ تم العثور على manifest.json بنجاح."
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -99,15 +116,14 @@ jobs:
         run: |
           mkdir -p build
           KEYSTORE_PASS=$(openssl rand -base64 24 | tr -dc 'a-zA-Z0-9' | head -c 24)
-          KEY_PASS=$(openssl rand -base64 24 | tr -dc 'a-zA-Z0-9' | head -c 24)
           keytool -genkeypair -v \
             -keystore build/android.keystore \
             -alias androidkey \
             -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass "$KEYSTORE_PASS" -keypass "$KEY_PASS" \
+            -storepass "$KEYSTORE_PASS" -keypass "$KEYSTORE_PASS" \
             -dname "CN=APKFactory, OU=APKFactory, O=APKFactory, L=NA, S=NA, C=IQ"
           echo "BUBBLEWRAP_KEYSTORE_PASSWORD=$KEYSTORE_PASS" >> "$GITHUB_ENV"
-          echo "BUBBLEWRAP_KEY_PASSWORD=$KEY_PASS" >> "$GITHUB_ENV"
+          echo "BUBBLEWRAP_KEY_PASSWORD=$KEYSTORE_PASS" >> "$GITHUB_ENV"
 
       - name: Generate twa-manifest.json from the PWA
         env:

@@ -60,8 +60,8 @@ jobs:
 
       - name: Install required SDK packages
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0" > /dev/null
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -74,6 +74,12 @@ jobs:
       - name: Configure Bubblewrap JDK/Android SDK paths (non-interactive)
         run: |
           ANDROID_SDK_PATH="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/.android/sdk}}"
+          echo "JAVA_HOME=$JAVA_HOME"
+          echo "ANDROID_SDK_PATH=$ANDROID_SDK_PATH"
+          echo "--- محتوى مجلد الـ SDK ---"
+          ls -la "$ANDROID_SDK_PATH"
+          echo "--- محتوى build-tools (إذا موجود) ---"
+          ls -la "$ANDROID_SDK_PATH/build-tools" || echo "مجلد build-tools غير موجود"
           mkdir -p "$HOME/.bubblewrap"
           cat > "$HOME/.bubblewrap/config.json" << EOF
           {
